@@ -1,0 +1,7 @@
+# Ignore node_modules folders
+client/node_modules/
+server/node_modules/
+commit-gpt/.idea/
+
+# Ignore .idea folder
+.idea/
