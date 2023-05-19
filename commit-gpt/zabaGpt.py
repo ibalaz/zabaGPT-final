@@ -3,7 +3,6 @@ import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-
 # Set the GitLab project URL and API token
 api_token = 'glpat-S1cAUFXxzoK4qNgRsnag'
 openai.api_key = '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'
@@ -41,7 +40,7 @@ def extract_added_lines(diff):
     added_lines = [line for line in diff_lines if line.startswith('+')]
 
     # Exclude lines that start with '+++'
-    added_lines = [line for line in added_lines if not line.startswith('+++')]
+    added_lines = [line[1:] for line in added_lines if not line.startswith('+++')]
 
     return added_lines
 
@@ -102,9 +101,6 @@ def gpt_endpoint():
     value = request.json.get('value')
     print('Value: ', value)
 
-    temperature = request.json.get('temperature')
-    print('Temperature: ', temperature)
-
     # Set the GitLab API endpoint for merge requests
     endpoint = f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits/{value}/diff'
     print('Endpoint: ', endpoint)
@@ -113,25 +109,27 @@ def gpt_endpoint():
     response = requests.get(endpoint, headers=headers)
     print('Response: ', response.json())
     output_text = ''
-    added_lines = ''
+    prompt_codes = []
 
     for commit in response.json():
         added_lines = extract_added_lines(commit['diff'])
         print("Added lines: ", added_lines)
+        prompt_code = '\n'.join(added_lines)
+        prompt_codes.append(prompt_code)
 
-        prompt = f"Optimize this added lines in commit {added_lines} and explain"
-        response2 = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=2300,
-            n=1,
-            stop=None,
-            temperature=temperature,
-        )
-        output_text += response2.choices[0].text
-        print('Output: ', output_text)
+    prompt = 'Optimize this code: \n' + '\n'.join(prompt_codes)
+    response2 = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
 
-    return jsonify(success=True, output_text=output_text, added_lines=str(added_lines))
+    output_text += response2['choices'][0]['message']['content']
+    print('Output: ', output_text)
+
+    return jsonify(success=True, output_text=output_text, added_lines=prompt)
 
 
 if __name__ == '__main__':
