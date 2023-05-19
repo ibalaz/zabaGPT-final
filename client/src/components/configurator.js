@@ -3,10 +3,9 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
-import FormLabel from '@mui/material/FormLabel';
-import Slider from '@mui/material/Slider';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
+import { textFieldClasses } from '@mui/material';
 
 const temperatureSliderMarks = [
     {
@@ -33,11 +32,11 @@ function Configurator({handleTemperatureChange, handleRequestTypeChange}) {
     return (
         <Grid container spacing={2}>
             <Grid xs={12} textAlign={"left"}>
-                <Typography variant="button" display="block" gutterBottom fontWeight={"bold"}> Konfigurator</Typography>
+                <Typography variant="button" display="block" gutterBottom fontWeight={"bold"}> Configurator</Typography>
             </Grid>
-            <Grid xs={8}>
+            <Grid xs={12} textAlign={"left"}> 
                 <FormControl>
-                    <Typography id="input-usage" gutterBottom>Korištenje</Typography>
+                    <Typography id="input-usage" gutterBottom></Typography>
                     <RadioGroup
                         row
                         aria-labelledby="radio-buttons-purpose-label"
@@ -46,13 +45,13 @@ function Configurator({handleTemperatureChange, handleRequestTypeChange}) {
                             handleRequestTypeChange(event.target.value);
                           }}
                     >
-                        <FormControlLabel value="CODE_REVIEW" control={<Radio />} label="Analiza koda" />
-                        <FormControlLabel value="CODE_REFACTOR" control={<Radio />} label="Refaktoriranje koda" />
-                        <FormControlLabel value="BASIC_PROMPT" control={<Radio />} label="Razgovor sa Chat GPT" />
+                        <FormControlLabel value="CODE_REVIEW" control={<Radio />} label="Code analysis" />
+                        <FormControlLabel value="CODE_REFACTOR" control={<Radio />} label="Code refactor" />
+                        <FormControlLabel value="CODE_ISSUE_FIX" control={<Radio />} label="Fix code issue" />
                     </RadioGroup>
                 </FormControl>
             </Grid>
-            <Grid xs={4}>
+            {/*<Grid xs={4}>
                 <Typography id="input-slider" gutterBottom>Temperatura</Typography>
                 <Slider 
                     min={0.2}
@@ -65,7 +64,8 @@ function Configurator({handleTemperatureChange, handleRequestTypeChange}) {
                     onChange={event => {
                         handleTemperatureChange(event.target.value);
                       }}/>
-            </Grid>
+            </Grid> */}
+            
         </Grid>
     )
 }

@@ -11,6 +11,8 @@ import Alert from "@mui/material/Alert";
 import Axios from "axios";
 import Configurator from "./configurator";
 import PromptEditor from "./promptEditor";
+import ReviewCode from './reviewCode';
+import TalkWithGpt from './talkWithGpt';
 import Review from "./review";
 import "../style/Home.css";
 import { ListItemButton, TextField, List, ListItemText } from "@mui/material";
@@ -59,6 +61,7 @@ function Home() {
 
   //codeSnippet and input
   const [code, setCode] = useState(`function add(a, b) {\n  return a + b;\n}`);
+  const [codeIssue, setCodeIssue] = useState("Fix this code");
   const [basicPrompt, setBasicPrompt] = useState("Tell me your name");
 
   // project url
@@ -77,10 +80,10 @@ function Home() {
   const [addedLines, setAddedLines] = useState("");
 
   //review
-  const [review, setReview] = useState(`Čekam primjer programskog koda...`);
+  const [review, setReview] = useState(`Waiting for an example...`);
 
   // tabs
-  const [value, setValue] = useState("1");
+  const [value, setValue] = useState(0);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -95,6 +98,10 @@ function Home() {
     setCode(data);
   };
 
+  const handleCodeIssueChange = (data) => {
+    setCodeIssue(data);
+  }
+
   const handleTemperatureChange = (temperature) => {
     setTemperature(temperature);
   };
@@ -104,7 +111,6 @@ function Home() {
   };
 
   const handleBasicPromptChange = (prompt) => {
-    console.log(JSON.stringify(prompt));
     setBasicPrompt(prompt);
   };
 
@@ -130,6 +136,7 @@ function Home() {
       },
       codeSnippet: code,
       basicPrompt: basicPrompt,
+      codeIssue: codeIssue
     })
       .then((res) => {
         if (res.data.success) {
@@ -201,24 +208,24 @@ function Home() {
     Axios.post("http://localhost:5000/process_mr_url", {
       mr_url: mergeUrl,
     })
-    .then((res) => {
-      if (res.data.success) {
-        setMergeUrlLabel("Gitlab url merge requesta " + res.data.mr_id);
-        setChangelogInput(res.data.prompt);
-        setChangelog(res.data.changelog);
-        setLoading(false);
-        setError(false);
-      } else {
+      .then((res) => {
+        if (res.data.success) {
+          setMergeUrlLabel("Gitlab url merge requesta " + res.data.mr_id);
+          setChangelogInput(res.data.prompt);
+          setChangelog(res.data.changelog);
+          setLoading(false);
+          setError(false);
+        } else {
+          setLoading(false);
+          setError(true);
+          setErrorMessage(res.data.error);
+        }
+      })
+      .catch((error) => {
         setLoading(false);
         setError(true);
-        setErrorMessage(res.data.error);
-      }
-    })
-    .catch((error) => {
-      setLoading(false);
-      setError(true);
-      setErrorMessage(error.message);
-    });
+        setErrorMessage(error.message);
+      });
   }
 
   return (
@@ -237,14 +244,15 @@ function Home() {
         <Tab label="Code optimization" {...a11yProps(0)} />
         <Tab label="Commit optimization" {...a11yProps(1)} />
         <Tab label="Merge changelog" {...a11yProps(2)} />
+        <Tab label="Talk with ChatGPT" {...a11yProps(3)} />
       </Tabs>
       <Grid xl={12} height="10px"></Grid>
       <Grid xl={12} height="10px">
         <Divider></Divider>
       </Grid>
       <Grid xl={12} height="10px"></Grid>
-       {/*  Mislav */}
-       <TabPanel value={value} index={0}>
+      {/*  Mislav */}
+      <TabPanel value={value} index={0}>
         <Grid container spacing={2}>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
@@ -263,6 +271,7 @@ function Home() {
                   requestType={requestType}
                   handleChange={handleSnippetEditorChange}
                   handleBasicPromptChange={handleBasicPromptChange}
+                  handleCodeIssueChange={handleCodeIssueChange}
                 ></PromptEditor>
               </Grid>
               <Grid xs={12}>
@@ -299,14 +308,12 @@ function Home() {
                 </Typography>
               </Grid>
               <Grid xs={12}>
-                {!error && !loading && (
-                  <Review value={review} readonly></Review>
-                )}
+                {!error && !loading && (requestType == 'CODE_REFACTOR' || requestType == 'CODE_ISSUE_FIX') && <ReviewCode review={review} readonly></ReviewCode>}
+                {!error && !loading && (requestType == 'BASIC_PROMPT' || requestType == 'CODE_REVIEW') && <Review value={review} readonly></Review>}
                 {loading && <CircularProgress color="success" />}
-                {error && !loading && (
-                  <Alert severity="error">{errorMessage}</Alert>
-                )}
+                {error && !loading && <Alert severity="error">{errorMessage}</Alert>}
               </Grid>
+
             </Box>
           </Grid>
         </Grid>
@@ -450,7 +457,7 @@ function Home() {
               </Grid>
               <Grid xs={12}>
                 {!error && !loading && (
-                <Review value={changelogInput} readonly></Review>
+                  <Review value={changelogInput} readonly></Review>
                 )}
                 {loading && <CircularProgress color="success" />}
               </Grid>
@@ -488,6 +495,9 @@ function Home() {
             </Box>
           </Grid>
         </Grid>
+      </TabPanel>
+      <TabPanel value={value} index={3}>
+        <TalkWithGpt></TalkWithGpt>
       </TabPanel>
     </Container>
   );

@@ -13,39 +13,60 @@ const getReview = (body) => {
   return new Promise ((resolve, reject) => {
     let requestType = body.configuration.requestType
     let prompt;
-    if(requestType == 'CODE_REVIEW') {
-      prompt = process.env.CODE_REVIEW_PREFIX + JSON.stringify(body.codeSnippet)
-    }
-    else if (requestType == 'CODE_REFACTOR') {
-      prompt = process.env.CODE_REFACTOR_PREFIX + JSON.stringify(body.codeSnippet)
-    }
-    else if (requestType == 'BASIC_PROMPT') {
-      prompt = body.basicPrompt
-    }
-    else {
-      prompt = "Tell me your name."
+
+    switch(requestType) {
+      case 'CODE_REVIEW':
+        prompt = process.env.CODE_REVIEW_PREFIX + JSON.stringify(body.codeSnippet);
+        break;
+      case 'CODE_REFACTOR':
+        prompt = process.env.CODE_REFACTOR_PREFIX + JSON.stringify(body.codeSnippet);
+        break;
+      case 'BASIC_PROMPT':
+        prompt = body.basicPrompt;
+        break;
+      case 'CODE_ISSUE_FIX':
+        prompt = process.env.CODE_ISSUE_FIX_PREFIX + "Issue:" + JSON.stringify(body.codeIssue) + 'Code:' + JSON.stringify(body.codeSnippet);
+        break;
+      default:
+        prompt = "Tell me your name.";
     }
       
       let temperature = body.configuration.temperature || parseInt(process.env.REVIEW_TEMPERATURE)
 
       console.log("requestType:" + requestType + ", temp:" + temperature + ", prompt:" + prompt)
 
-      const openai = new OpenAIApi(configuration);
-      openai.createCompletion({
-        model: process.env.REVIEW_MODEL,
-        prompt: prompt,
-        max_tokens: parseInt(process.env.REVIEW_MAX_TOKENS),
-        temperature: temperature,
-      }).then( response => {
-        let responseData = {
-          success: true,
-          review : response.data.choices[0].text
-        }
-        resolve(responseData)
-      }).catch( error => {
+      if(process.env.ENDPOINT_TYPE == 'COMPLETIONS') {
+        openai.createCompletion({
+          model: process.env.REVIEW_MODEL,
+          prompt: prompt,
+          max_tokens: parseInt(process.env.REVIEW_MAX_TOKENS),
+          temperature: temperature,
+        }).then( response => {
+          let responseData = {
+            success: true,
+            review : response.data.choices[0].text
+          }
+          resolve(responseData)
+        }).catch( error => {
+  
+          reject(new Error ('Error in openAiService.getReview (COMPLETIONS) ->' + error))
+        });
+      }
 
-        reject(new Error ('Error in openAiService.getReview -> ' + error))
-      });
+      else if(process.env.ENDPOINT_TYPE == 'CHAT_COMPLETIONS') {
+        openai.createChatCompletion({
+          model: process.env.CHAT_COMPLETIONS_MODEL,
+          messages: [{role: "user", content: prompt}],
+        }).then( response => {
+          let responseData = {
+            success: true,
+            review : response.data.choices[0].message.content
+          }
+          resolve(responseData)
+        }).catch( error => {
+          reject(new Error ('Error in openAiService.getReview (CHAT_COMPLETIONS)-> ' + error))
+        });
+      }
   })
 
   
