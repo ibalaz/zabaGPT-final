@@ -1,3 +1,5 @@
+import hashlib
+import sqlite3
 import openai
 import requests
 from flask import Flask, request, jsonify
@@ -14,6 +16,74 @@ headers = {
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 project_id = ''
+
+conn = sqlite3.connect('kv_store.db')  # Connect to the SQLite database (it will be created if it doesn't exist)
+cursor = conn.cursor()
+# Create a table named kv_store with key and value columns if it does not exist yet...
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS kv_store(
+        key TEXT UNIQUE,
+        value TEXT
+    );
+''')
+conn.commit()  # Commit the changes
+conn.close()  # Close the connection
+
+
+# A function to insert a key-value pair into the kv_store table...
+def put_cache_value(key, value):
+    # Connect to the SQLite database (it will be created if it doesn't exist)
+    conn2 = sqlite3.connect('kv_store.db')
+    cursor2 = conn2.cursor()
+    try:
+        cursor2.execute('''INSERT INTO kv_store(key, value) VALUES(?, ?)''', (key, value))
+        conn2.commit()  # Commit the changes
+        conn2.close()  # Close the connection
+    except sqlite3.IntegrityError:
+        print(f"Key {key} already exists.")
+
+
+# A function to retrieve a value by key from the kv_store table
+def get_cache_value(key):
+    # Connect to the SQLite database (it will be created if it doesn't exist)
+    conn2 = sqlite3.connect('kv_store.db')
+    cursor2 = conn2.cursor()
+    cursor2.execute('''SELECT value FROM kv_store WHERE key = ?''', (key,))
+    result = cursor2.fetchone()
+    conn2.close()  # Close the connection
+
+    return result[0] if result else None
+
+
+def hash_input(for_hash):
+    # Create a SHA256 hash object
+    sha256_hash = hashlib.sha256()
+
+    # Update the hash object with the string to be hashed
+    sha256_hash.update(for_hash.encode('utf-8'))
+
+    return sha256_hash.hexdigest()  # Get the hexadecimal representation of the hashed value
+
+
+def chat_gpt_cached_answer(chat_prompt):
+    chat_gpt_model = "gpt-3.5-turbo"
+    chat_prompt_hash = hash_input(chat_gpt_model + "|" + chat_prompt)
+    print(f"Hash of {chat_gpt_model}|" + chat_prompt[0:30] + f"... je {chat_prompt_hash}")
+
+    result = get_cache_value(chat_prompt_hash)
+    if result is None:
+        response = openai.ChatCompletion.create(
+            model=chat_gpt_model,
+            messages=[
+                {"role": "user", "content": chat_prompt}
+            ]
+        )
+
+        result = response['choices'][0]['message']['content']
+        put_cache_value(chat_prompt_hash, result)
+        return result
+    else:
+        return result
 
 
 def extract_project_path(url):
@@ -118,15 +188,8 @@ def gpt_endpoint():
         prompt_codes.append(prompt_code)
 
     prompt = 'Optimize this code: \n' + '\n'.join(prompt_codes)
-    response2 = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ]
-    )
 
-    output_text += response2['choices'][0]['message']['content']
+    output_text += chat_gpt_cached_answer(prompt)
     print('Output: ', output_text)
 
     return jsonify(success=True, output_text=output_text, added_lines=prompt)
