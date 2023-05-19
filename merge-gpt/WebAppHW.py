@@ -159,8 +159,10 @@ def process_url(url):
             else:
                 cl4diff = diff
 
+            open_ai_promt = f"Propose a changelog entry in bullets for: {cl4diff}"
+
             cl4diff_length = str(len(cl4diff))
-            mr_changes_str = mr_changes_str + f">>>>>>>>>>    DIFFERENCES FOR {new_path} ({diff_length} / {cl4diff_length})     <<<<<<<<<<\n\n{cl4diff}\n\n\n"
+            mr_changes_str = mr_changes_str + f">>>>>>>>>>    DIFFERENCES FOR {new_path} ({diff_length} / {cl4diff_length})     <<<<<<<<<<\n\n{open_ai_promt}\n\n\n"
 
             open_ai_promt = f"Propose a changelog entry in bullets for {cl4diff}"
             # openAIPromt = f"Propose a descriptive changelog entry for {cl4diff}"
@@ -170,12 +172,12 @@ def process_url(url):
 
             changelog_str = changelog_str + f"Changes in {new_path}\n{cl4diff_result}\n\n"
 
-        return jsonify(success=True, url=url, prompt=open_ai_promt, mr_chages=mr_changes_str, project_path=project_path_with_namespace.replace("%2F", "/"), project_id=project_id, mr_id=merge_request_id, changelog=changelog_str)
+        return jsonify(success=True, url=url, prompt=mr_changes_str, mr_changes_str=mr_changes_str, project_path=project_path_with_namespace.replace("%2F", "/"), project_id=project_id, mr_id=merge_request_id, changelog=changelog_str)
     else:
         print(response.json())
         print(f"Failed to retrieve merge request changes. Status code: {response.status_code}")
 
-        return jsonify(success=True, url=url, mr_chages=mr_changes_str, project_path=project_path_with_namespace.replace("%2F", "/"), project_id=project_id, mr_id=merge_request_id, changelog=changelog_str)
+        return jsonify(success=False, url=url, error=f"Failed to retrieve merge request changes. Status code: {response.status_code}", prompt=mr_changes_str, mr_changes_str=mr_changes_str, project_path=project_path_with_namespace.replace("%2F", "/"), project_id=project_id, mr_id=merge_request_id, changelog=changelog_str)
 
 
 if __name__ == '__main__':

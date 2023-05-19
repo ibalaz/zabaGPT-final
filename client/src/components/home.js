@@ -65,6 +65,7 @@ function Home() {
   const [projectUrl, setProjectUrl] = useState("");
 
   // merge
+  const [mergeUrlLabel, setMergeUrlLabel] = useState("Gitlab url merge requesta");
   const [mergeUrl, setMergeUrl] = useState("");
   const [changelogInput, setChangelogInput] = useState("");
   const [changelog, setChangelog] = useState("");
@@ -202,6 +203,7 @@ function Home() {
     })
     .then((res) => {
       if (res.data.success) {
+        setMergeUrlLabel("Gitlab url merge requesta " + res.data.mr_id);
         setChangelogInput(res.data.prompt);
         setChangelog(res.data.changelog);
         setLoading(false);
@@ -220,9 +222,9 @@ function Home() {
   }
 
   return (
-    <Container className="home" maxWidth="lg">
-      <Grid xl={12}>
-        <Typography variant="h6" gutterBottom>
+    <Container className="home" maxWidth="xl">
+      <Grid xl={12} height="50px">
+        <Typography variant="h4" gutterBottom mt="15px">
           ZabaGPT Hackaton
         </Typography>
       </Grid>
@@ -230,12 +232,19 @@ function Home() {
         value={value}
         onChange={handleChange}
         aria-label="basic tabs example"
+        centered
       >
         <Tab label="Code optimization" {...a11yProps(0)} />
         <Tab label="Commit optimization" {...a11yProps(1)} />
         <Tab label="Merge changelog" {...a11yProps(2)} />
       </Tabs>
-      <TabPanel value={value} index={0}>
+      <Grid xl={12} height="10px"></Grid>
+      <Grid xl={12} height="10px">
+        <Divider></Divider>
+      </Grid>
+      <Grid xl={12} height="10px"></Grid>
+       {/*  Mislav */}
+       <TabPanel value={value} index={0}>
         <Grid container spacing={2}>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
@@ -302,19 +311,18 @@ function Home() {
           </Grid>
         </Grid>
       </TabPanel>
+      {/*  Baki */}
       <TabPanel value={value} index={1}>
         <Grid container spacing={2}>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
-              <Grid xs={12}>
-                <Divider></Divider>
-              </Grid>
               <Grid xs={12}>
                 <TextField
                   id="projectUrl"
                   label="Gitlab url projekta"
                   value={projectUrl}
                   onChange={handleChangeUserUrl}
+                  fullWidth
                 />
               </Grid>
               <Grid xs={12}>
@@ -399,19 +407,18 @@ function Home() {
           </Grid>
         </Grid>
       </TabPanel>
+      {/*  DanBi */}
       <TabPanel value={value} index={2}>
-      <Grid container spacing={2}>
+        <Grid container spacing={2}>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
               <Grid xs={12}>
-                <Divider></Divider>
-              </Grid>
-              <Grid xs={12}>
                 <TextField
                   id="mergeUrl"
-                  label="Gitlab url merga"
+                  label={mergeUrlLabel}
                   value={mergeUrl}
                   onChange={handleChangeMergeUrl}
+                  fullWidth
                 />
               </Grid>
               <Grid xs={12}>
@@ -427,15 +434,9 @@ function Home() {
                   Pošalji
                 </Button>
               </Grid>
-            </Box>
-          </Grid>
-          <Divider
-            orientation="vertical"
-            flexItem
-            sx={{ mr: "-1px" }}
-          ></Divider>
-          <Grid xs={6}>
-            <Box sx={{ mb: 2 }}>
+              <Grid xs={12}>
+                <Divider></Divider>
+              </Grid>
               <Grid xs={12} textAlign={"left"}>
                 <Typography
                   variant="button"
@@ -449,10 +450,22 @@ function Home() {
               </Grid>
               <Grid xs={12}>
                 {!error && !loading && (
-                  <Review value={changelogInput} readonly></Review>
+                <Review value={changelogInput} readonly></Review>
                 )}
                 {loading && <CircularProgress color="success" />}
-
+              </Grid>
+            </Box>
+          </Grid>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{ mr: "-1px" }}
+          ></Divider>
+          <Grid xs={6}>
+            <Box sx={{ mb: 2 }}>
+              <Grid xs={12}>
+                <Grid xs={12} textAlign={"left"} height="142px">
+                </Grid>
                 <Grid xs={12} textAlign={"left"}>
                   <Typography
                     variant="button"

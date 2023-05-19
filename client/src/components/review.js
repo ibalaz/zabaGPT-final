@@ -28,7 +28,7 @@ function Review(props) {
   return (
     <Grid container spacing={2}>
       <Grid xs={12}>
-        <StyledTextarea aria-label="empty textarea" placeholder="Empty" aria-multiline={true} minRows={3} maxRows={25} value={props.value} style={{ width: "100%" }} />
+        <StyledTextarea aria-label="empty textarea" placeholder="Empty" aria-multiline={true} minRows={3} maxRows={32} value={props.value} style={{ width: "96%" }} />
       </Grid>
     </Grid>
   );
