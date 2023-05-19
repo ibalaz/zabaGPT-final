@@ -105,11 +105,8 @@ def process_url(url):
 
     git_lab_at = "glpat-aHvrnFvQUCbQym2_7ayM"  # os.environ.get("GITLAB_ACCESS_TOKEN")
 
-    # Extract the project ID...
-    project_id_start = url.find("gitlab.com/") + 11
-    project_id_end = url.find("/-/", project_id_start)
-
-    project_path_with_namespace = quote(url[project_id_start:project_id_end]).replace("/", "%2F")
+    # Extract the project path...
+    project_path_with_namespace = extract_project_path(url)
 
     api_url_get_project_id = f"https://gitlab.com/api/v4/projects/{project_path_with_namespace}"
     print("API_URL_GetProjectID = " + api_url_get_project_id)
