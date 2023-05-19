@@ -80,6 +80,18 @@ def chat_gpt_cached_answer(chat_prompt):
         return result
 
 
+# Extract the project path from any GitLab URL...
+def extract_project_path(url):
+    project_path_start = url.find("gitlab.com/") + 11
+    if url.find("/-/", project_path_start) == -1:
+        project_path_with_namespace = quote(url[project_path_start:]).replace("/activity", "")
+    else:
+        project_path_end = url.find("/-/", project_path_start)
+        project_path_with_namespace = quote(url[project_path_start:project_path_end])
+ 
+    return project_path_with_namespace.replace("/", "%2F")
+
+
 @app.route('/process_mr_url', methods=['POST'])
 def process_mr_url():
     url = request.json.get('mr_url')

@@ -1,3 +1,4 @@
+from urllib.parse import quote
 import hashlib
 import sqlite3
 import openai
@@ -86,20 +87,16 @@ def chat_gpt_cached_answer(chat_prompt):
         return result
 
 
+# Extract the project path from any GitLab URL...
 def extract_project_path(url):
-    # Remove the protocol (http:// or https://) from the URL
-    url = url.replace('http://', '').replace('https://', '')
-
-    # Find the index of the first occurrence of '/'
-    first_slash_index = url.index('/')
-
-    # Find the index of the second occurrence of '/'
-    second_slash_index = url.index('/', first_slash_index + 1)
-
-    # Extract the project path
-    project_path = url[second_slash_index + 1:]
-
-    return project_path
+    project_path_start = url.find("gitlab.com/") + 11
+    if url.find("/-/", project_path_start) == -1:
+        project_path_with_namespace = quote(url[project_path_start:]).replace("/activity", "")
+    else:
+        project_path_end = url.find("/-/", project_path_start)
+        project_path_with_namespace = quote(url[project_path_start:project_path_end])
+ 
+    return project_path_with_namespace.replace("/", "%2F")
 
 
 def extract_added_lines(diff):
@@ -120,26 +117,29 @@ def get_commits():
     global project_id
     commit_links = []
 
+    git_lab_at = "glpat-aHvrnFvQUCbQym2_7ayM"  # os.environ.get("GITLAB_ACCESS_TOKEN")
+
     project_url = request.json.get('url')
     print('Project url: ', project_url)
 
     project_path = extract_project_path(project_url)
     print('Project path: ', project_path)
 
-    url = f'https://gitlab.com/api/v4/projects?search={project_path}'
-    response_project_id = requests.get(url, headers=headers)
+    api_url_get_project_id = f"https://gitlab.com/api/v4/projects/{project_path}"
+    print("API_URL_GetProjectID = " + api_url_get_project_id)
+
+    git_lab_at = "glpat-aHvrnFvQUCbQym2_7ayM"  # os.environ.get("GITLAB_ACCESS_TOKEN")
+
+    # Send GET request to GitLab API
+    headers = {"PRIVATE-TOKEN": git_lab_at}
+    response_project_id = requests.get(api_url_get_project_id, headers=headers)
 
     if response_project_id.status_code == 200:
-        projects = response_project_id.json()
-        if len(projects) > 0:
-            project_id = projects[0]['id']
-        else:
-            print('No project found with specified path.')
-            return jsonify(success=False, message='No project found with specified path.')
-
+       project_id = response_project_id.json()["id"]
+       #print('Project found ' + str(response_project_id.json()))
     else:
         print('Error getting project information')
-        return jsonify(success=False, message='Error getting project information')
+        return jsonify(success=False, messae='Error getting project information')
 
     print('Project id: ', project_id)
 
@@ -148,16 +148,21 @@ def get_commits():
 
     # Send a GET request to the API endpoint
     response = requests.get(endpoint, headers=headers)
-    print('Response: ', response)
+    print('Response: ', str(response))
 
     # Check if the request was successful
     if response.status_code == 200:
         # Get the JSON data from the response
         commits = response.json()
 
+        counter = 0
         # Print the merge request information
         for com in commits:
             commit_links.append({'label': com["title"], 'value': com["id"]})
+            counter += 1
+            if counter == 5:
+                break
+
         print('Commits: ', commit_links)
     else:
         print('Failed to retrieve commits.')
@@ -175,9 +180,12 @@ def gpt_endpoint():
     endpoint = f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits/{value}/diff'
     print('Endpoint: ', endpoint)
 
-    # Send a GET request to the API endpoint
+    git_lab_at = "glpat-aHvrnFvQUCbQym2_7ayM"  # os.environ.get("GITLAB_ACCESS_TOKEN")
+
+    # Send GET request to GitLab API
+    headers = {"PRIVATE-TOKEN": git_lab_at}
     response = requests.get(endpoint, headers=headers)
-    print('Response: ', response.json())
+    #print('Response: ', response.json())
     output_text = ''
     prompt_codes = []
 
