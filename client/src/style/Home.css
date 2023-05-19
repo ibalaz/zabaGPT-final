@@ -1,3 +1,29 @@
 .home{
     background-color:  white;
 }
+
+.commit-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .commit-list-item {
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #f5f5f5;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  
+  .commit-list-item:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .commit-list-item.selected {
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  .commit-list-item-text {
+    font-weight: bold;
+  }

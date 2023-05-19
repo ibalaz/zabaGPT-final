@@ -1,13 +1,19 @@
 import openai
 import requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 
 # Set the GitLab project URL and API token
 api_token = 'glpat-S1cAUFXxzoK4qNgRsnag'
 openai.api_key = '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'
 
+headers = {
+    'Authorization': f'Bearer {api_token}'
+}
+
 app = Flask(__name__, static_url_path='/static')
+CORS(app)
 project_id = ''
 
 
@@ -40,69 +46,68 @@ def extract_added_lines(diff):
     return added_lines
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+@app.route('/commits', methods=['GET', 'POST'])
+def get_commits():
+    global project_id
     commit_links = []
-    if request.method == 'POST':
-        # Set the headers for the API request
-        headers = {
-            'Authorization': f'Bearer {api_token}'
-        }
-        global project_id
-        project_url = request.form['input-text']
-        print('Project url: ', project_url)
-        project_path = extract_project_path(project_url)
-        print('Project path: ', project_path)
 
-        url = f'https://gitlab.com/api/v4/projects?search={project_path}'
-        response_project_id = requests.get(url, headers=headers)
+    project_url = request.json.get('url')
+    print('Project url: ', project_url)
 
-        if response_project_id.status_code == 200:
-            projects = response_project_id.json()
-            if len(projects) > 0:
-                project_id = projects[0]['id']
-            else:
-                print('No project found with specified path.')
+    project_path = extract_project_path(project_url)
+    print('Project path: ', project_path)
+
+    url = f'https://gitlab.com/api/v4/projects?search={project_path}'
+    response_project_id = requests.get(url, headers=headers)
+
+    if response_project_id.status_code == 200:
+        projects = response_project_id.json()
+        if len(projects) > 0:
+            project_id = projects[0]['id']
         else:
-            print("Error getting project information")
+            print('No project found with specified path.')
+            return jsonify(success=False, message='No project found with specified path.')
 
-        print('Project id: ', project_id)
+    else:
+        print('Error getting project information')
+        return jsonify(success=False, message='Error getting project information')
 
-        # Set the GitLab API endpoint for merge requests
-        endpoint = f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits'
+    print('Project id: ', project_id)
 
-        # Send a GET request to the API endpoint
-        response = requests.get(endpoint, headers=headers)
-        print('Response: ', response)
+    # Set the GitLab API endpoint for merge requests
+    endpoint = f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits'
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            # Get the JSON data from the response
-            commits = response.json()
+    # Send a GET request to the API endpoint
+    response = requests.get(endpoint, headers=headers)
+    print('Response: ', response)
 
-            # Print the merge request information
-            for com in commits:
-                commit_links.append({'label': com["title"], 'value': com["id"]})
-            print('Commits: ', commit_links)
-        else:
-            print('Failed to retrieve commits.')
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Get the JSON data from the response
+        commits = response.json()
 
-    return render_template('index.html', commit_links=commit_links)
+        # Print the merge request information
+        for com in commits:
+            commit_links.append({'label': com["title"], 'value': com["id"]})
+        print('Commits: ', commit_links)
+    else:
+        print('Failed to retrieve commits.')
+        return jsonify(success=False, message='Failed to retrieve commits from gitlab.')
+
+    return jsonify(success=True, commits=commit_links)
 
 
 @app.route('/gpt_endpoint', methods=['GET', 'POST'])
 def gpt_endpoint():
-    value = request.args.get('value')
+    value = request.json.get('value')
     print('Value: ', value)
+
+    temperature = request.json.get('temperature')
+    print('Temperature: ', temperature)
 
     # Set the GitLab API endpoint for merge requests
     endpoint = f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits/{value}/diff'
     print('Endpoint: ', endpoint)
-
-    # Set the headers for the API request
-    headers = {
-        'Authorization': f'Bearer {api_token}'
-    }
 
     # Send a GET request to the API endpoint
     response = requests.get(endpoint, headers=headers)
@@ -121,13 +126,13 @@ def gpt_endpoint():
             max_tokens=2300,
             n=1,
             stop=None,
-            temperature=0.7,
+            temperature=temperature,
         )
         output_text += response2.choices[0].text
         print('Output: ', output_text)
 
-    return jsonify(output_text=output_text, added_lines=str(added_lines))
+    return jsonify(success=True, output_text=output_text, added_lines=str(added_lines))
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

@@ -9,3 +9,5 @@ echo "Started server app"
 cd ../commit-gpt || exit
 start cmd /k "pip install -r requirements.txt && python zabaGpt.py"
 echo "Started commit-gpt app"
+
+cd ..
