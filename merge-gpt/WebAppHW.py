@@ -3,10 +3,81 @@ import requests
 import hashlib
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-
+import sqlite3
+import openai
 
 app = Flask(__name__)
 CORS(app)
+
+conn = sqlite3.connect('kv_store.db')  # Connect to the SQLite database (it will be created if it doesn't exist)
+cursor = conn.cursor()
+# Create a table named kv_store with key and value columns if it does not exists yet...
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS kv_store(
+        key TEXT UNIQUE,
+        value TEXT
+    );
+''')
+conn.commit()  # Commit the changes
+conn.close()  # Close the connection
+
+# A function to insert a key-value pair into the kv_store table...
+def put_cache_value(key, value):
+    # Connect to the SQLite database (it will be created if it doesn't exist)
+    conn2 = sqlite3.connect('kv_store.db')
+    cursor2 = conn2.cursor()
+    try:
+        cursor2.execute('''INSERT INTO kv_store(key, value) VALUES(?, ?)''', (key, value))
+        conn2.commit()  # Commit the changes
+        conn2.close()  # Close the connection
+    except sqlite3.IntegrityError:
+        print(f"Key {key} already exists.")
+
+
+# A function to retrieve a value by key from the kv_store table
+def get_cache_value(key):
+    # Connect to the SQLite database (it will be created if it doesn't exist)
+    conn2 = sqlite3.connect('kv_store.db')
+    cursor2 = conn2.cursor()
+    cursor2.execute('''SELECT value FROM kv_store WHERE key = ?''', (key,))
+    result = cursor2.fetchone()
+    conn2.close()  # Close the connection
+
+    return result[0] if result else None
+
+
+def hash_input(for_hash):
+    # Create a SHA256 hash object
+    sha256_hash = hashlib.sha256()
+
+    # Update the hash object with the string to be hashed
+    sha256_hash.update(for_hash.encode('utf-8'))
+
+    return sha256_hash.hexdigest()  # Get the hexadecimal representation of the hashed value
+
+
+openai.api_key = "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"  # os.environ.get("OPENAI_API_KEY")
+
+
+def chat_gpt_cached_answer(chat_prompt):
+    chat_gpt_model = "gpt-3.5-turbo"
+    chat_prompt_hash = hash_input(chat_gpt_model + "|" + chat_prompt)
+    print(f"Hash of {chat_gpt_model}|" + chat_prompt[0:30] + f"... je {chat_prompt_hash}")
+
+    result = get_cache_value(chat_prompt_hash)
+    if result is None:
+        response = openai.ChatCompletion.create(
+            model=chat_gpt_model,
+            messages=[
+                {"role": "user", "content": chat_prompt}
+            ]
+        )
+
+        result = response['choices'][0]['message']['content']
+        put_cache_value(chat_prompt_hash, result)
+        return result
+    else:
+        return result
 
 
 @app.route('/process_mr_url', methods=['POST'])
@@ -15,34 +86,6 @@ def process_mr_url():
     result = process_url(url)  # Call your Python function here
 
     return result
-
-
-def hash_input(data):
-    # Create a SHA256 hash object
-    sha256_hash = hashlib.sha256()
-
-    # Update the hash object with the string to be hashed
-    sha256_hash.update(data.encode('utf-8'))
-
-    return sha256_hash.hexdigest()  # Get the hexadecimal representation of the hashed value
-
-
-def chat_gpt_cached_answer(chat_prompt):
-    import openai
-
-    openai.api_key = "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"  # os.environ.get("OPENAI_API_KEY")
-
-    chat_prompt_hash = hash_input(chat_prompt)
-    print(chat_prompt_hash)
-
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": chat_prompt}
-        ]
-    )
-
-    return response['choices'][0]['message']['content']
 
 
 def process_url(url):
