@@ -151,7 +151,6 @@ def process_url(url):
         # Process and display the changes
         for change in mr_changes:
             new_path = change["new_path"]
-            old_path = change["old_path"]
             diff = change["diff"]
             # print(f"Diff for {new_path}:\n{diff}")
             diff_length = str(len(diff))
@@ -162,8 +161,8 @@ def process_url(url):
 
                 diff4cl = ""
                 for line in filtered_lines:
-                    line_without_minus = line[1:]
-                    diff4cl = diff4cl + f"{line_without_minus}\n"
+                    line_without_plus = line.lstrip("+")
+                    diff4cl = diff4cl + f"{line_without_plus}\n"
 
                 cl4diff = diff4cl[0:3000]
             else:
@@ -173,9 +172,6 @@ def process_url(url):
 
             cl4diff_length = str(len(cl4diff))
             mr_changes_str = mr_changes_str + f">>>>>>>>>>    DIFFERENCES FOR {new_path} ({diff_length} / {cl4diff_length})     <<<<<<<<<<\n\n{open_ai_promt}\n\n\n"
-
-            open_ai_promt = f"Propose a changelog entry in bullets for {cl4diff}"
-            # openAIPromt = f"Propose a descriptive changelog entry for {cl4diff}"
 
             cl4diff_result = chat_gpt_cached_answer(open_ai_promt)
             print("ChatGPT Response: " + cl4diff_result)

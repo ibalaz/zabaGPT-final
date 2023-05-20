@@ -183,22 +183,48 @@ def gpt_endpoint():
     headers = {"PRIVATE-TOKEN": git_lab_at}
     response = requests.get(endpoint, headers=headers)
     # print('Response: ', response.json())
-    output_text = ''
-    prompt_codes = []
+    
+    cr_changes_str = ""
+    cr_result_str = ""
 
-    for commit in response.json():
-        added_lines = extract_added_lines(commit['diff'])
-        print("Added lines: ", added_lines)
-        prompt_code = '\n'.join(added_lines)
-        prompt_codes.append(prompt_code)
+    # Check response status code
+    if response.status_code == 200:
+        # Parse response JSON to access changes data
+        for commit in response.json():
+            new_path = commit["new_path"]
+            diff = commit["diff"]
+            diff_length = str(len(diff))
 
-    prompt = 'Optimize this code: \n' + '\n'.join(prompt_codes)
+            lines = diff.splitlines()
+            filtered_lines = [line for line in lines if not line.startswith("-") and not line.startswith("@")]
 
-    output_text += chat_gpt_cached_answer(prompt)
-    print('Output: ', output_text)
+            diff4cr = ""
+            for line in filtered_lines:
+                line_without_plus = line.lstrip("+")
+                diff4cr = diff4cr + f"{line_without_plus}\n"
 
-    return jsonify(success=True, output_text=output_text, added_lines=prompt, value=value, label= label)
+            cr4diff = diff4cr[0:3000]
+            
+            if len(cr4diff) > 100:
+                open_ai_promt = f"List possible code improvements in this code: {cr4diff}"
 
+                cr4diff_length = str(len(cr4diff))
+                cr_changes_str += f">>>>>>>>>>    DIFFERENCES FOR {new_path} ({diff_length} / {cr4diff_length})     <<<<<<<<<<\n\n{open_ai_promt}\n\n\n"
+
+                cr4diff_result = chat_gpt_cached_answer(open_ai_promt)
+                print("ChatGPT Response: " + cr4diff_result)
+
+                cr_result_str += f"Code improvements for {new_path}\n{cr4diff_result}\n\n"
+            else:
+                cr4diff_length = str(len(cr4diff))
+                cr_changes_str += f">>>>>>>>>>  DIFFERENCES FOR {new_path} ({diff_length} / {cr4diff_length}) to small for optimization  <<<<<<<<<<\n\n{cr4diff}\n\n\n"
+
+        return jsonify(success=True, output_text=cr_result_str, added_lines=cr_changes_str, value=value, label= label)
+    else:
+        print("Failed to retrieve commit changes: " + response.json())
+
+        return jsonify(success=False, output_text=cr_result_str, added_lines=cr_changes_str, value=value, label= label, error=f"Failed to retrieve commit changes. Status code: {response.status_code}")
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
