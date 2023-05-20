@@ -71,19 +71,24 @@ function Home() {
   // project url
   const [projectUrl, setProjectUrl] = useState("");
 
-  // merge
-  const [mergeUrlLabel, setMergeUrlLabel] = useState("Gitlab url merge requesta");
-  const [mergeUrl, setMergeUrl] = useState("");
-  const [changelogInput, setChangelogInput] = useState("");
-  const [changelog, setChangelog] = useState("");
-
   // commits
+  const [commitUrlLabel, setCommitUrlLabel] = useState("Please paste any GitLab Project URL here");
+  const [commitUrlPromptLabel, setCommitUrlPromptLabel] = useState("Prompt");
+  const [commitUrlResponseLabel, setCommitUrlResponseLabel] = useState("AI Response");
   const [commits, setCommits] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState();
   const [commitReview, setCommitReview] = useState("");
   const [addedLines, setAddedLines] = useState("");
-  const itemsPerPage = 5;
+  const itemsPerPage = 3;
   const [page, setPage] = useState(0);
+
+  // merge
+  const [mergeUrlLabel, setMergeUrlLabel] = useState("Please paste GitLab Merge Request URL here");
+  const [mergeUrlPromptLabel, setMergeUrlPromptLabel] = useState("Prompt");
+  const [mergeUrlResponseLabel, setMergeUrlResponseLabel] = useState("AI Response");
+  const [mergeUrl, setMergeUrl] = useState("");
+  const [changelogInput, setChangelogInput] = useState("");
+  const [changelog, setChangelog] = useState("");
 
   const handleNext = () => {
     if (page < Math.floor(commits.length / itemsPerPage)) {
@@ -136,9 +141,9 @@ function Home() {
     setProjectUrl(event.target.value);
   };
 
-  const handleCommitListClick = (event, index, value) => {
+  const handleCommitListClick = (event, index, value, label) => {
     setSelectedIndex(index);
-    getCommitReview(value);
+    getCommitReview(value, label);
   };
 
   const handleChangeMergeUrl = (event) => {
@@ -181,6 +186,7 @@ function Home() {
     })
       .then((res) => {
         if (res.data.success) {
+          setCommitUrlLabel("GitLab Project URL");
           setCommits(res.data.commits);
           setLoading(false);
           setError(false);
@@ -197,10 +203,13 @@ function Home() {
       });
   };
 
-  const getCommitReview = (value) => {
+  const getCommitReview = (value, label) => {
+    console.log(value + ' = ' + label)
     setLoading(true);
+    setCommitUrlPromptLabel("Prompt for: " + label);
+    setCommitUrlResponseLabel("Optimization for: " + label);
     Axios.post("http://localhost:5001/gpt_endpoint", {
-      value: value,
+      value: value, label:label
     })
       .then((res) => {
         if (res.data.success) {
@@ -228,7 +237,9 @@ function Home() {
     })
       .then((res) => {
         if (res.data.success) {
-          setMergeUrlLabel("Gitlab url merge requesta " + res.data.mr_id);
+          setMergeUrlLabel("GitLab Merge Request URL (" + res.data.mr_id + ")");
+          setMergeUrlPromptLabel("Prompt for project " + res.data.project_path + " and MR " + res.data.mr_id);
+          setMergeUrlResponseLabel("Changelog.md proposal for " + res.data.project_path + " and MR " + res.data.mr_id);
           setChangelogInput(res.data.prompt);
           setChangelog(res.data.changelog);
           setLoading(false);
@@ -248,14 +259,17 @@ function Home() {
 
   return (
     <Container className="home" maxWidth="xl">
-      <Grid container spacing={2}>
-        <Grid xs={4} height="60px">
-            <img src={zabaLogo} alt="ZABA logo"/>
+      <Grid container height="70px" spacing={2}>
+        <Grid xs={3}>
+          <img src={zabaLogo} alt="ZABA logo"/>
         </Grid>
-        <Grid xs={8} height="60px" textAlign={"left"} mt="15px">
+        <Grid xs={6} textAlign={"center"} mt="15px">
           <Typography variant="h5">     ZaBaGPT Hackaton - AI Team Assistant</Typography>
         </Grid>
+        <Grid xs={3} textAlign={"center"} mt="10px">
+          <Typography variant="h8" color="red"><b>Attention!</b> Please do not input any personal or sensitive data into fields sent to AI Assistant.</Typography>
         </Grid>
+      </Grid>
       <Tabs
         value={value}
         onChange={handleChange}
@@ -363,7 +377,7 @@ function Home() {
               <Grid xs={12}>
                 <TextField
                   id="projectUrl"
-                  label="Gitlab url projekta"
+                  label={commitUrlLabel}
                   value={projectUrl}
                   onChange={handleChangeUserUrl}
                   fullWidth
@@ -383,37 +397,57 @@ function Home() {
                 </Button>
               </Grid>
             </Box>
-            {commits.length !== 0 && (
-              <>
-                <List dense="true" className="commit-list">
-                  {commits.slice(page * itemsPerPage, (page + 1) * itemsPerPage).map((element, index) => (
-                    <ListItemButton
-                      key={index}
-                      selected={selectedIndex === index}
-                      onClick={(event) =>
-                        handleCommitListClick(event, index, element.value)
-                      }
-                      className="commit-list-item"
-                    >
-                      <ListItemText
-                        primary={element.label}
-                        value={element.value}
-                        className="commit-list-item-text"
-                      />
-                    </ListItemButton>
-                  ))}
-                </List>
-                <div className="pagination">
-                  <IconButton onClick={handlePrev} disabled={page === 0}>
-                    <ArrowBackIosIcon />
-                  </IconButton>
-                  <span>Page {page + 1}</span>
-                  <IconButton onClick={handleNext} disabled={page === Math.floor(commits.length / itemsPerPage)}>
-                    <ArrowForwardIosIcon />
-                  </IconButton>
-                </div>
-              </>
-            )}
+            <Box sx={{ mb: 2 }}>
+              {commits.length !== 0 && (
+                <>
+                  <List dense="true" className="commit-list">
+                    {commits.slice(page * itemsPerPage, (page + 1) * itemsPerPage).map((element, index) => (
+                      <ListItemButton
+                        key={index}
+                        selected={selectedIndex === index}
+                        onClick={(event) =>
+                          handleCommitListClick(event, index, element.value, element.label)
+                        }
+                        className="commit-list-item"
+                      >
+                        <ListItemText
+                          primary={element.label}
+                          value={element.value}
+                          className="commit-list-item-text"
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                  <div className="pagination">
+                    <IconButton onClick={handlePrev} disabled={page === 0}>
+                      <ArrowBackIosIcon />
+                    </IconButton>
+                    <span>Page {page + 1}</span>
+                    <IconButton onClick={handleNext} disabled={page === Math.floor(commits.length / itemsPerPage)}>
+                      <ArrowForwardIosIcon />
+                    </IconButton>
+                  </div>
+                </>
+              )}
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Grid xs={12} textAlign={"left"}>
+                <Typography
+                  variant="h6"
+                  display="block"
+                  gutterBottom
+                  fontWeight={"bold"}
+                >
+                  {commitUrlPromptLabel}
+                </Typography>
+              </Grid>
+              <Grid xs={12}>
+                {!error && !loading && (
+                  <Review value={addedLines} readonly></Review>
+                )}
+                {loading && <CircularProgress color="success" />}
+              </Grid>
+            </Box>
           </Grid>
           <Divider
             orientation="vertical"
@@ -424,38 +458,21 @@ function Home() {
             <Box sx={{ mb: 2 }}>
               <Grid xs={12} textAlign={"left"}>
                 <Typography
-                  variant="button"
+                  variant="h6"
                   display="block"
                   gutterBottom
                   fontWeight={"bold"}
                 >
-                  {" "}
-                  PROMPT
+                  {commitUrlResponseLabel}
                 </Typography>
               </Grid>
               <Grid xs={12}>
-                {!error && !loading && (
-                  <Review value={addedLines} readonly></Review>
-                )}
-                {loading && <CircularProgress color="success" />}
-
-                <Grid xs={12} textAlign={"left"}>
-                  <Typography
-                    variant="button"
-                    display="block"
-                    gutterBottom
-                    fontWeight={"bold"}
-                  >
-                    {" "}
-                    AI RESPONSE
-                  </Typography>
-                </Grid>
                 {!error && !loading && (
                   <Review value={commitReview} readonly></Review>
                 )}
                 {loading && <CircularProgress color="success" />}
                 {error && !loading && (
-                  <Alert severity="error">{errorMessage}</Alert>
+                <Alert severity="error">{errorMessage}</Alert>
                 )}
               </Grid>
             </Box>
@@ -489,18 +506,14 @@ function Home() {
                   Send
                 </Button>
               </Grid>
-              <Grid xs={12}>
-                <Divider></Divider>
-              </Grid>
               <Grid xs={12} textAlign={"left"}>
                 <Typography
-                  variant="button"
+                  variant="h6"
                   display="block"
                   gutterBottom
                   fontWeight={"bold"}
                 >
-                  {" "}
-                  PROMPT
+                  {mergeUrlPromptLabel}
                 </Typography>
               </Grid>
               <Grid xs={12}>
@@ -519,17 +532,16 @@ function Home() {
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
               <Grid xs={12}>
-                <Grid xs={12} textAlign={"left"} height="142px">
+                <Grid xs={12} textAlign={"left"} height="124px">
                 </Grid>
                 <Grid xs={12} textAlign={"left"}>
                   <Typography
-                    variant="button"
+                    variant="h6"
                     display="block"
                     gutterBottom
                     fontWeight={"bold"}
                   >
-                    {" "}
-                    AI RESPONSE
+                    {mergeUrlResponseLabel}
                   </Typography>
                 </Grid>
                 {!error && !loading && (

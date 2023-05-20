@@ -125,7 +125,8 @@ def process_url(url):
         print(response.json())
 
     # Extract the string after the last slash
-    last_slash_index = url.rfind("/")
+    mr_url_cleaned = url.rstrip("/commits").rstrip("/pipelines").rstrip("/diffs")
+    last_slash_index = mr_url_cleaned.rfind("/")
     if last_slash_index != -1:
         merge_request_id = url[last_slash_index + 1:]
     else:

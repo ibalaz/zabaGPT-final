@@ -170,7 +170,8 @@ def get_commits():
 @app.route('/gpt_endpoint', methods=['GET', 'POST'])
 def gpt_endpoint():
     value = request.json.get('value')
-    print('Value: ', value)
+    label = request.json.get('label')
+    print('Value: ', value, ', Label: ', label)
 
     # Set the GitLab API endpoint for merge requests
     endpoint = f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits/{value}/diff'
@@ -196,7 +197,7 @@ def gpt_endpoint():
     output_text += chat_gpt_cached_answer(prompt)
     print('Output: ', output_text)
 
-    return jsonify(success=True, output_text=output_text, added_lines=prompt)
+    return jsonify(success=True, output_text=output_text, added_lines=prompt, value=value, label= label)
 
 
 if __name__ == '__main__':
