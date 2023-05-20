@@ -14,6 +14,7 @@ import Configurator from "./configurator";
 import PromptEditor from "./promptEditor";
 import ReviewCode from './reviewCode';
 import TalkWithGpt from './talkWithGpt';
+import CodeTranslator from './codeTranslator';
 import Review from "./review";
 import "../style/Home.css";
 import { ListItemButton, TextField, List, ListItemText } from "@mui/material";
@@ -343,8 +344,7 @@ function Home() {
       </TabPanel>
       {/* Code translaator (Mislav) */}
       <TabPanel value={value} index={1}>
-        <Grid container spacing={2}>
-        </Grid>
+        <CodeTranslator></CodeTranslator>
       </TabPanel>
       {/* AI mentor (Mislav) */}
       <TabPanel value={value} index={2}>

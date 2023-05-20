@@ -54,9 +54,10 @@ const getReview = (body) => {
       }
 
       else if(process.env.ENDPOINT_TYPE == 'CHAT_COMPLETIONS') {
+        let promptTrimmed = prompt.substring(0, 3000);
         openai.createChatCompletion({
           model: process.env.CHAT_COMPLETIONS_MODEL,
-          messages: [{role: "user", content: prompt}],
+          messages: [{role: "user", content: promptTrimmed}],
         }).then( response => {
           let responseData = {
             success: true,
