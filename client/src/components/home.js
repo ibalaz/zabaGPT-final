@@ -230,8 +230,8 @@ function Home() {
         if (res.data.success) {
           setCodeOptimizationPrompt(res.data.prompt)
           setCodeOptimization(res.data.output_text);
-          setCodeOptimizationPromptLabel("Prompt for project " + res.data.project_path + " and file " + res.data.file_path);
-          setCodeOptimizationResponseLabel("Improvement proposal for " + res.data.project_path + " and file " + res.data.file_path);
+          setCodeOptimizationPromptLabel("Prompt for " + res.data.file_path);
+          setCodeOptimizationResponseLabel("Improvement for " + res.data.file_path);
           setLoading(false);
           setError(false);
         } else {
@@ -473,7 +473,7 @@ function Home() {
             <FileTree files={files} onFileClick={handleFileClick} />
             <Grid xs={12} textAlign={"left"}>
                 <Typography
-                  variant="button"
+                  variant="h6"
                   display="block"
                   gutterBottom
                   fontWeight={"bold"}
@@ -494,10 +494,9 @@ function Home() {
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
               <Grid xs={12}>
-                
                 <Grid xs={12} textAlign={"left"}>
                   <Typography
-                    variant="button"
+                    variant="h6"
                     display="block"
                     gutterBottom
                     fontWeight={"bold"}
