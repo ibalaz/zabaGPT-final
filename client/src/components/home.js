@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import zabaLogo from '../resources/zaba_logo_2.jpg';
+import zabaLogo from "../resources/zaba_logo_2.jpg";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -12,17 +12,18 @@ import Alert from "@mui/material/Alert";
 import Axios from "axios";
 import Configurator from "./configurator";
 import PromptEditor from "./promptEditor";
-import ReviewCode from './reviewCode';
-import TalkWithGpt from './talkWithGpt';
+import ReviewCode from "./reviewCode";
+import TalkWithGpt from "./talkWithGpt";
 import Review from "./review";
 import "../style/Home.css";
 import { ListItemButton, TextField, List, ListItemText } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import PropTypes from "prop-types";
-import IconButton from '@mui/material/IconButton';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import FileTree from './tree'
 
 TabPanel.propTypes = {
   children: PropTypes.node,
@@ -70,6 +71,8 @@ function Home() {
 
   // project url
   const [projectUrl, setProjectUrl] = useState("");
+  const [codeOptimizationProjectUrl, setCodeOptimizationProjectUrl] =
+    useState("");
 
   // commits
   const [commitUrlLabel, setCommitUrlLabel] = useState("Please paste any GitLab Project URL here");
@@ -102,6 +105,11 @@ function Home() {
     }
   };
 
+  // files code optimization
+  const [files, setFiles] = useState([]);
+  const [codeOptimizationPrompt, setCodeOptimizationPrompt] = useState("");
+  const [codeOptimization, setCodeOptimization] = useState("");
+
   //review
   const [review, setReview] = useState(`Waiting for an example...`);
 
@@ -123,7 +131,7 @@ function Home() {
 
   const handleCodeIssueChange = (data) => {
     setCodeIssue(data);
-  }
+  };
 
   const handleTemperatureChange = (temperature) => {
     setTemperature(temperature);
@@ -141,13 +149,21 @@ function Home() {
     setProjectUrl(event.target.value);
   };
 
+  const handleCodeOptimizationUrl = (event) => {
+    setCodeOptimizationProjectUrl(event.target.value);
+  };
+
   const handleCommitListClick = (event, index, value, label) => {
     setSelectedIndex(index);
     getCommitReview(value, label);
   };
 
   const handleChangeMergeUrl = (event) => {
-    setMergeUrl(event.target.value)
+    setMergeUrl(event.target.value);
+  };
+
+  const handleFileClick = (event) => {
+    getCodeOptimization(event);
   }
 
   const getReview = () => {
@@ -159,7 +175,7 @@ function Home() {
       },
       codeSnippet: code,
       basicPrompt: basicPrompt,
-      codeIssue: codeIssue
+      codeIssue: codeIssue,
     })
       .then((res) => {
         if (res.data.success) {
@@ -178,6 +194,53 @@ function Home() {
         setErrorMessage(error.message);
       });
   };
+
+  const getFiles = () => {
+    setLoading(true);
+    Axios.post("http://localhost:5002/files", {
+      url: codeOptimizationProjectUrl,
+    })
+      .then((res) => {
+        if (res.data.success) {
+          setFiles(res.data.files);
+          setLoading(false);
+          setError(false);
+        } else {
+          setLoading(false);
+          setError(true);
+          setErrorMessage(res.error);
+        }
+      })
+      .catch((error) => {
+        setLoading(false);
+        setError(true);
+        setErrorMessage(error.message);
+      });
+  };
+
+  const getCodeOptimization = (value) => {
+    setLoading(true);
+    Axios.post("http://localhost:5002/gpt_endpoint", {
+      value: value,
+    })
+      .then((res) => {
+        if (res.data.success) {
+          setCodeOptimizationPrompt(res.data.prompt)
+          setCodeOptimization(res.data.output_text);
+          setLoading(false);
+          setError(false);
+        } else {
+          setLoading(false);
+          setError(true);
+          setErrorMessage(res.error);
+        }
+      })
+      .catch((error) => {
+        setLoading(false);
+        setError(true);
+        setErrorMessage(error.message);
+      });
+  }
 
   const getCommits = () => {
     setLoading(true);
@@ -255,7 +318,7 @@ function Home() {
         setError(true);
         setErrorMessage(error.message);
       });
-  }
+  };
 
   return (
     <Container className="home" maxWidth="xl">
@@ -345,20 +408,30 @@ function Home() {
                 </Typography>
               </Grid>
               <Grid xs={12}>
-                {!error && !loading && (requestType === 'CODE_REFACTOR' || requestType === 'CODE_ISSUE_FIX') && <ReviewCode review={review} readonly></ReviewCode>}
-                {!error && !loading && (requestType === 'BASIC_PROMPT' || requestType === 'CODE_REVIEW') && <Review value={review} readonly></Review>}
+                {!error &&
+                  !loading &&
+                  (requestType === "CODE_REFACTOR" ||
+                    requestType === "CODE_ISSUE_FIX") && (
+                    <ReviewCode review={review} readonly></ReviewCode>
+                  )}
+                {!error &&
+                  !loading &&
+                  (requestType === "BASIC_PROMPT" ||
+                    requestType === "CODE_REVIEW") && (
+                    <Review value={review} readonly></Review>
+                  )}
                 {loading && <CircularProgress color="success" />}
-                {error && !loading && <Alert severity="error">{errorMessage}</Alert>}
+                {error && !loading && (
+                  <Alert severity="error">{errorMessage}</Alert>
+                )}
               </Grid>
-
             </Box>
           </Grid>
         </Grid>
       </TabPanel>
       {/* Code translaator (Mislav) */}
       <TabPanel value={value} index={1}>
-        <Grid container spacing={2}>
-        </Grid>
+        <Grid container spacing={2}></Grid>
       </TabPanel>
       {/* AI mentor (Mislav) */}
       <TabPanel value={value} index={2}>
@@ -367,6 +440,78 @@ function Home() {
       {/* Code review (Baki) */}
       <TabPanel value={value} index={3}>
         <Grid container spacing={2}>
+          <Grid xs={6}>
+            <Box sx={{ mb: 2 }}>
+              <Grid xs={12}>
+                <TextField
+                  id="codeOptimizationProjectUrl"
+                  label="Gitlab url projekta"
+                  value={codeOptimizationProjectUrl}
+                  onChange={handleCodeOptimizationUrl}
+                  fullWidth
+                />
+              </Grid>
+              <Grid xs={12}>
+                <Button
+                  size="medium"
+                  variant="contained"
+                  color="success"
+                  endIcon={<SendIcon />}
+                  onClick={() => {
+                    getFiles();
+                  }}
+                >
+                  Send
+                </Button>
+              </Grid>
+            </Box>
+            <FileTree files={files} onFileClick={handleFileClick} />
+          </Grid>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{ mr: "-1px" }}
+          ></Divider>
+          <Grid xs={6}>
+            <Box sx={{ mb: 2 }}>
+              <Grid xs={12} textAlign={"left"}>
+                <Typography
+                  variant="button"
+                  display="block"
+                  gutterBottom
+                  fontWeight={"bold"}
+                >
+                  {" "}
+                  PROMPT
+                </Typography>
+              </Grid>
+              <Grid xs={12}>
+                {!error && !loading && (
+                  <Review value={codeOptimizationPrompt} readonly></Review>
+                )}
+                {loading && <CircularProgress color="success" />}
+
+                <Grid xs={12} textAlign={"left"}>
+                  <Typography
+                    variant="button"
+                    display="block"
+                    gutterBottom
+                    fontWeight={"bold"}
+                  >
+                    {" "}
+                    AI RESPONSE
+                  </Typography>
+                </Grid>
+                {!error && !loading && (
+                  <Review value={codeOptimization} readonly></Review>
+                )}
+                {loading && <CircularProgress color="success" />}
+                {error && !loading && (
+                  <Alert severity="error">{errorMessage}</Alert>
+                )}
+              </Grid>
+            </Box>
+          </Grid>
         </Grid>
       </TabPanel>
       {/* Commit review (Baki) */}
@@ -397,11 +542,12 @@ function Home() {
                 </Button>
               </Grid>
             </Box>
-            <Box sx={{ mb: 2 }}>
-              {commits.length !== 0 && (
-                <>
-                  <List dense="true" className="commit-list">
-                    {commits.slice(page * itemsPerPage, (page + 1) * itemsPerPage).map((element, index) => (
+            {commits.length !== 0 && (
+              <>
+                <List dense="true" className="commit-list">
+                  {commits
+                    .slice(page * itemsPerPage, (page + 1) * itemsPerPage)
+                    .map((element, index) => (
                       <ListItemButton
                         key={index}
                         selected={selectedIndex === index}
@@ -429,7 +575,6 @@ function Home() {
                   </div>
                 </>
               )}
-            </Box>
             <Box sx={{ mb: 2 }}>
               <Grid xs={12} textAlign={"left"}>
                 <Typography
