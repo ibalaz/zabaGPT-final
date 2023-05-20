@@ -13,6 +13,7 @@ import Axios from "axios";
 import Configurator from "./configurator";
 import PromptEditor from "./promptEditor";
 import ReviewCode from "./reviewCode";
+import CodeTranslator from "./codeTranslator";
 import TalkWithGpt from "./talkWithGpt";
 import Review from "./review";
 import "../style/Home.css";
@@ -431,7 +432,7 @@ function Home() {
       </TabPanel>
       {/* Code translaator (Mislav) */}
       <TabPanel value={value} index={1}>
-        <Grid container spacing={2}></Grid>
+        <CodeTranslator></CodeTranslator>
       </TabPanel>
       {/* AI mentor (Mislav) */}
       <TabPanel value={value} index={2}>
