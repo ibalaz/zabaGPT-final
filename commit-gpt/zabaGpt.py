@@ -95,7 +95,7 @@ def extract_project_path(url):
     else:
         project_path_end = url.find("/-/", project_path_start)
         project_path_with_namespace = quote(url[project_path_start:project_path_end])
- 
+
     return project_path_with_namespace.replace("/", "%2F")
 
 
@@ -135,8 +135,8 @@ def get_commits():
     response_project_id = requests.get(api_url_get_project_id, headers=headers)
 
     if response_project_id.status_code == 200:
-       project_id = response_project_id.json()["id"]
-       #print('Project found ' + str(response_project_id.json()))
+        project_id = response_project_id.json()["id"]
+        # print('Project found ' + str(response_project_id.json()))
     else:
         print('Error getting project information')
         return jsonify(success=False, messae='Error getting project information')
@@ -155,13 +155,9 @@ def get_commits():
         # Get the JSON data from the response
         commits = response.json()
 
-        counter = 0
         # Print the merge request information
         for com in commits:
             commit_links.append({'label': com["title"], 'value': com["id"]})
-            counter += 1
-            if counter == 5:
-                break
 
         print('Commits: ', commit_links)
     else:
@@ -185,7 +181,7 @@ def gpt_endpoint():
     # Send GET request to GitLab API
     headers = {"PRIVATE-TOKEN": git_lab_at}
     response = requests.get(endpoint, headers=headers)
-    #print('Response: ', response.json())
+    # print('Response: ', response.json())
     output_text = ''
     prompt_codes = []
 

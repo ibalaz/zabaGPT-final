@@ -19,6 +19,9 @@ import { ListItemButton, TextField, List, ListItemText } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import PropTypes from "prop-types";
+import IconButton from '@mui/material/IconButton';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 TabPanel.propTypes = {
   children: PropTypes.node,
@@ -78,6 +81,20 @@ function Home() {
   const [selectedIndex, setSelectedIndex] = useState();
   const [commitReview, setCommitReview] = useState("");
   const [addedLines, setAddedLines] = useState("");
+  const itemsPerPage = 5;
+  const [page, setPage] = useState(0);
+
+  const handleNext = () => {
+    if (page < Math.floor(commits.length / itemsPerPage)) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (page > 0) {
+      setPage(page - 1);
+    }
+  };
 
   //review
   const [review, setReview] = useState(`Waiting for an example...`);
@@ -311,8 +328,8 @@ function Home() {
                 </Typography>
               </Grid>
               <Grid xs={12}>
-                {!error && !loading && (requestType == 'CODE_REFACTOR' || requestType == 'CODE_ISSUE_FIX') && <ReviewCode review={review} readonly></ReviewCode>}
-                {!error && !loading && (requestType == 'BASIC_PROMPT' || requestType == 'CODE_REVIEW') && <Review value={review} readonly></Review>}
+                {!error && !loading && (requestType === 'CODE_REFACTOR' || requestType === 'CODE_ISSUE_FIX') && <ReviewCode review={review} readonly></ReviewCode>}
+                {!error && !loading && (requestType === 'BASIC_PROMPT' || requestType === 'CODE_REVIEW') && <Review value={review} readonly></Review>}
                 {loading && <CircularProgress color="success" />}
                 {error && !loading && <Alert severity="error">{errorMessage}</Alert>}
               </Grid>
@@ -350,24 +367,35 @@ function Home() {
               </Grid>
             </Box>
             {commits.length !== 0 && (
-              <List dense="true" className="commit-list">
-                {commits.map((element, index) => (
-                  <ListItemButton
-                    key={index}
-                    selected={selectedIndex === index}
-                    onClick={(event) =>
-                      handleCommitListClick(event, index, element.value)
-                    }
-                    className="commit-list-item"
-                  >
-                    <ListItemText
-                      primary={element.label}
-                      value={element.value}
-                      className="commit-list-item-text"
-                    />
-                  </ListItemButton>
-                ))}
-              </List>
+              <>
+                <List dense="true" className="commit-list">
+                  {commits.slice(page * itemsPerPage, (page + 1) * itemsPerPage).map((element, index) => (
+                    <ListItemButton
+                      key={index}
+                      selected={selectedIndex === index}
+                      onClick={(event) =>
+                        handleCommitListClick(event, index, element.value)
+                      }
+                      className="commit-list-item"
+                    >
+                      <ListItemText
+                        primary={element.label}
+                        value={element.value}
+                        className="commit-list-item-text"
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+                <div className="pagination">
+                  <IconButton onClick={handlePrev} disabled={page === 0}>
+                    <ArrowBackIosIcon />
+                  </IconButton>
+                  <span>Page {page + 1}</span>
+                  <IconButton onClick={handleNext} disabled={page === Math.floor(commits.length / itemsPerPage)}>
+                    <ArrowForwardIosIcon />
+                  </IconButton>
+                </div>
+              </>
             )}
           </Grid>
           <Divider
