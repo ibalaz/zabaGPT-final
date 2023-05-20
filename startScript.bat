@@ -14,4 +14,8 @@ cd ../merge-gpt || exit
 start cmd /k "pip install -r requirements.txt && python WebAppHW.py"
 echo "Started merge-gpt app"
 
+cd ../file-optimization-gpt || exit
+start cmd /k "python fileGpt.py"
+echo "Started file-optimization app"
+
 cd ..
