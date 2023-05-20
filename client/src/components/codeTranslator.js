@@ -9,7 +9,6 @@ import SendIcon from "@mui/icons-material/Send";
 import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import ReviewCode from './reviewCode';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import { highlight, languages } from 'prismjs/components/prism-core';
