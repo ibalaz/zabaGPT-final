@@ -169,7 +169,7 @@ def gpt_endpoint():
     while prompt_len > 0:
         if prompt_len > token_len:
             if counter == 0:
-                prompt = 'Optimize this code: \n' + ''.join(response.content.decode('utf-8')[0:token_len])
+                prompt = 'List possible code improvements in this code: \n' + ''.join(response.content.decode('utf-8')[0:token_len])
                 output_text = chat_gpt_cached_answer(prompt)
             else:
                 prompt = 'and this code: \n' + ''.join(response.content.decode('utf-8')[(counter * token_len): token_len * (counter+1)])
@@ -177,7 +177,7 @@ def gpt_endpoint():
             prompt_len = prompt_len - token_len
             counter += 1
         else:
-            prompt = 'Optimize this code: \n' + ''.join(response.content.decode('utf-8'))
+            prompt = 'List possible code improvements in this code: \n' + ''.join(response.content.decode('utf-8'))
             output_text += chat_gpt_cached_answer(prompt)
             prompt_len = 0
 
