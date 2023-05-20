@@ -34,7 +34,7 @@ const StyledTreeView = styled(TreeView)({
 const FileTreeItem = ({ node, onClick }) => {
   const handleNodeClick = (event, value) => {
     if(node.file) {
-      onClick(node.file.value);
+      onClick(node.file.value.replace("/", "%2F"));
       event.stopPropagation();
     }
   };
