@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import zabaLogo from '../resources/zaba_logo_2.jpg';
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -247,31 +248,33 @@ function Home() {
 
   return (
     <Container className="home" maxWidth="xl">
-      <Grid xs={4}>
-          <img src="../resources/zaba_logo_2.jpg" alt="ZABA logo" />
-      </Grid>
-      <Grid xs={8} height="50px" textAlign={"center"}>
-            <Typography variant="h4" gutterBottom mt="15px">
-              ZabaGPT Hackaton
-            </Typography>
-      </Grid>
+      <Grid container spacing={2}>
+        <Grid xs={4} height="60px">
+            <img src={zabaLogo} alt="ZABA logo"/>
+        </Grid>
+        <Grid xs={8} height="60px" textAlign={"left"} mt="15px">
+          <Typography variant="h5">     ZaBaGPT Hackaton - AI Team Assistant</Typography>
+        </Grid>
+        </Grid>
       <Tabs
         value={value}
         onChange={handleChange}
         aria-label="basic tabs example"
         centered
       >
-        <Tab label="Code optimization" {...a11yProps(0)} />
-        <Tab label="Commit optimization" {...a11yProps(1)} />
-        <Tab label="Merge changelog" {...a11yProps(2)} />
-        <Tab label="Talk with ChatGPT" {...a11yProps(3)} />
+        <Tab label="Code optimizer" {...a11yProps(0)} />
+        <Tab label="Code translator" {...a11yProps(1)} />
+        <Tab label="AI mentor" {...a11yProps(2)} />
+        <Tab label="Code review" {...a11yProps(3)} />
+        <Tab label="Commit review" {...a11yProps(4)} />
+        <Tab label="Merge doc helper" {...a11yProps(5)} />
       </Tabs>
       <Grid xl={12} height="10px"></Grid>
       <Grid xl={12} height="10px">
         <Divider></Divider>
       </Grid>
       <Grid xl={12} height="10px"></Grid>
-      {/*  Mislav */}
+      {/*  Code optimizer (Mislav) */}
       <TabPanel value={value} index={0}>
         <Grid container spacing={2}>
           <Grid xs={6}>
@@ -338,8 +341,22 @@ function Home() {
           </Grid>
         </Grid>
       </TabPanel>
-      {/*  Baki */}
+      {/* Code translaator (Mislav) */}
       <TabPanel value={value} index={1}>
+        <Grid container spacing={2}>
+        </Grid>
+      </TabPanel>
+      {/* AI mentor (Mislav) */}
+      <TabPanel value={value} index={2}>
+        <TalkWithGpt></TalkWithGpt>
+      </TabPanel>
+      {/* Code review (Baki) */}
+      <TabPanel value={value} index={3}>
+        <Grid container spacing={2}>
+        </Grid>
+      </TabPanel>
+      {/* Commit review (Baki) */}
+      <TabPanel value={value} index={4}>
         <Grid container spacing={2}>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
@@ -445,8 +462,8 @@ function Home() {
           </Grid>
         </Grid>
       </TabPanel>
-      {/*  DanBi */}
-      <TabPanel value={value} index={2}>
+      {/*  Merge Doc Helper (DanBi) */}
+      <TabPanel value={value} index={5}>
         <Grid container spacing={2}>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
@@ -526,9 +543,6 @@ function Home() {
             </Box>
           </Grid>
         </Grid>
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        <TalkWithGpt></TalkWithGpt>
       </TabPanel>
     </Container>
   );
