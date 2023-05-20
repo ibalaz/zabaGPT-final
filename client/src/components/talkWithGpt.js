@@ -77,7 +77,7 @@ function TalkWithGpt() {
                             getReview();
                         }}
                     >
-                        Pošalji
+                        Send
                     </Button>
                 </Grid>
             </Grid>

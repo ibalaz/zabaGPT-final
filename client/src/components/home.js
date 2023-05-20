@@ -230,10 +230,13 @@ function Home() {
 
   return (
     <Container className="home" maxWidth="xl">
-      <Grid xl={12} height="50px">
-        <Typography variant="h4" gutterBottom mt="15px">
-          ZabaGPT Hackaton
-        </Typography>
+      <Grid xs={4}>
+          <img src="../resources/zaba_logo_2.jpg" alt="ZABA logo" />
+      </Grid>
+      <Grid xs={8} height="50px" textAlign={"center"}>
+            <Typography variant="h4" gutterBottom mt="15px">
+              ZabaGPT Hackaton
+            </Typography>
       </Grid>
       <Tabs
         value={value}
@@ -284,7 +287,7 @@ function Home() {
                     getReview();
                   }}
                 >
-                  Pošalji
+                  Send
                 </Button>
               </Grid>
             </Box>
@@ -304,7 +307,7 @@ function Home() {
                   fontWeight={"bold"}
                 >
                   {" "}
-                  AI ODGOVOR
+                  AI RESPONSE
                 </Typography>
               </Grid>
               <Grid xs={12}>
@@ -342,7 +345,7 @@ function Home() {
                     getCommits();
                   }}
                 >
-                  Pošalji
+                  Send
                 </Button>
               </Grid>
             </Box>
@@ -399,7 +402,7 @@ function Home() {
                     fontWeight={"bold"}
                   >
                     {" "}
-                    AI ODGOVOR
+                    AI RESPONSE
                   </Typography>
                 </Grid>
                 {!error && !loading && (
@@ -438,7 +441,7 @@ function Home() {
                     getChangelog();
                   }}
                 >
-                  Pošalji
+                  Send
                 </Button>
               </Grid>
               <Grid xs={12}>
@@ -481,7 +484,7 @@ function Home() {
                     fontWeight={"bold"}
                   >
                     {" "}
-                    AI ODGOVOR
+                    AI RESPONSE
                   </Typography>
                 </Grid>
                 {!error && !loading && (
