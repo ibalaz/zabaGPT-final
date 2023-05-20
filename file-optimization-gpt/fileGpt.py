@@ -160,12 +160,27 @@ def gpt_endpoint():
     print('Endpoint: ', endpoint)
 
     response = requests.get(endpoint, headers=headers)
-    print("Response raw file: ", response.content)
+    print("Response raw file: ", response.content.decode('utf-8'))
     output_text = ''
+    prompt = ''
+    prompt_len = len(response.content.decode('utf-8'))
+    counter = 0
+    token_len = 2000
+    while prompt_len > 0:
+        if prompt_len > token_len:
+            if counter == 0:
+                prompt = 'Optimize this code: \n' + ''.join(response.content.decode('utf-8')[0:token_len])
+                output_text = chat_gpt_cached_answer(prompt)
+            else:
+                prompt = 'and this code: \n' + ''.join(response.content.decode('utf-8')[(counter * token_len): token_len * (counter+1)])
+                output_text = chat_gpt_cached_answer(prompt)
+            prompt_len = prompt_len - token_len
+            counter += 1
+        else:
+            prompt = 'Optimize this code: \n' + ''.join(response.content.decode('utf-8'))
+            output_text += chat_gpt_cached_answer(prompt)
+            prompt_len = 0
 
-    prompt = 'Optimize this code: \n' + '\n'.join(str(response.content))
-
-    output_text += chat_gpt_cached_answer(prompt)
     print('Output: ', output_text)
 
     return jsonify(success=True, output_text=output_text, prompt=prompt)
