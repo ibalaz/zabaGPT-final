@@ -1,25 +1,28 @@
-import React from 'react';
-import { TreeView, TreeItem } from '@mui/lab';
+import React from "react";
+import { TreeView, TreeItem } from "@mui/lab";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { styled } from '@mui/system';
-import { Folder, InsertDriveFile } from '@mui/icons-material';
+import { styled } from "@mui/system";
+import { Folder, InsertDriveFile } from "@mui/icons-material";
+import Box from "@mui/material/Box";
 
 // Transforms flat list into a tree structure
 const parseFileTree = (files) => {
-  const root = { name: '/', children: [] };
+  const root = { name: "/", children: [] };
   for (const file of files) {
-      const pathParts = file.value.split('/');
-      let currentPart = root;
-      for (const part of pathParts) {
-          let existingPart = currentPart.children.find((child) => child.name === part);
-          if (!existingPart) {
-              existingPart = { name: part, children: [] };
-              currentPart.children.push(existingPart);
-          }
-          currentPart = existingPart;
+    const pathParts = file.value.split("/");
+    let currentPart = root;
+    for (const part of pathParts) {
+      let existingPart = currentPart.children.find(
+        (child) => child.name === part
+      );
+      if (!existingPart) {
+        existingPart = { name: part, children: [] };
+        currentPart.children.push(existingPart);
       }
-      currentPart.file = file; // store original file object
+      currentPart = existingPart;
+    }
+    currentPart.file = file; // store original file object
   }
   return root;
 };
@@ -30,10 +33,9 @@ const StyledTreeView = styled(TreeView)({
   maxWidth: 400,
 });
 
-
 const FileTreeItem = ({ node, onClick }) => {
   const handleNodeClick = (event, value) => {
-    if(node.file) {
+    if (node.file) {
       onClick(node.file.value.replace("/", "%2F"));
       event.stopPropagation();
     }
@@ -43,17 +45,19 @@ const FileTreeItem = ({ node, onClick }) => {
     <TreeItem
       nodeId={node.file ? node.file.value : node.name}
       label={
-        node.file ? (
-          <span onClick={(event) => handleNodeClick(event, node.file.value)}>
-            <InsertDriveFile color="action" fontSize="inherit" />
-            {node.file.label}
-          </span>
-        ) : (
-          <>
-            <Folder color="action" fontSize="inherit" />
-            {node.name}
-          </>
-        )
+        <Box sx={{ textAlign: "left" }}>
+          {node.file ? (
+            <span onClick={(event) => handleNodeClick(event, node.file.value)}>
+              <InsertDriveFile color="action" fontSize="inherit" />
+              {node.file.label}
+            </span>
+          ) : (
+            <>
+              <Folder color="action" fontSize="inherit" />
+              {node.name}
+            </>
+          )}
+        </Box>
       }
     >
       {node.children.map((childNode, i) => (

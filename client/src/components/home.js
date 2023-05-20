@@ -110,6 +110,8 @@ function Home() {
   const [files, setFiles] = useState([]);
   const [codeOptimizationPrompt, setCodeOptimizationPrompt] = useState("");
   const [codeOptimization, setCodeOptimization] = useState("");
+  const [codeOptimizationPromptLabel, setCodeOptimizationPromptLabel] = useState("Prompt");
+  const [codeOptimizationResponseLabel, setCodeOptimizationResponseLabel] = useState("AI Response");
 
   //review
   const [review, setReview] = useState(`Waiting for an example...`);
@@ -228,6 +230,8 @@ function Home() {
         if (res.data.success) {
           setCodeOptimizationPrompt(res.data.prompt)
           setCodeOptimization(res.data.output_text);
+          setCodeOptimizationPromptLabel("Prompt for project " + res.data.project_path + " and file " + res.data.file_path);
+          setCodeOptimizationResponseLabel("Improvement proposal for " + res.data.project_path + " and file " + res.data.file_path);
           setLoading(false);
           setError(false);
         } else {
@@ -446,7 +450,7 @@ function Home() {
               <Grid xs={12}>
                 <TextField
                   id="codeOptimizationProjectUrl"
-                  label="Gitlab url projekta"
+                  label="Gitlab project URL"
                   value={codeOptimizationProjectUrl}
                   onChange={handleCodeOptimizationUrl}
                   fullWidth
@@ -467,6 +471,20 @@ function Home() {
               </Grid>
             </Box>
             <FileTree files={files} onFileClick={handleFileClick} />
+            <Grid xs={12} textAlign={"left"}>
+                <Typography
+                  variant="button"
+                  display="block"
+                  gutterBottom
+                  fontWeight={"bold"}
+                >
+                  {codeOptimizationPromptLabel}
+                </Typography>
+                {!error && !loading && (
+                  <Review value={codeOptimizationPrompt} readonly></Review>
+                )}
+                {loading && <CircularProgress color="success" />}
+              </Grid>
           </Grid>
           <Divider
             orientation="vertical"
@@ -475,23 +493,8 @@ function Home() {
           ></Divider>
           <Grid xs={6}>
             <Box sx={{ mb: 2 }}>
-              <Grid xs={12} textAlign={"left"}>
-                <Typography
-                  variant="button"
-                  display="block"
-                  gutterBottom
-                  fontWeight={"bold"}
-                >
-                  {" "}
-                  PROMPT
-                </Typography>
-              </Grid>
               <Grid xs={12}>
-                {!error && !loading && (
-                  <Review value={codeOptimizationPrompt} readonly></Review>
-                )}
-                {loading && <CircularProgress color="success" />}
-
+                
                 <Grid xs={12} textAlign={"left"}>
                   <Typography
                     variant="button"
@@ -499,8 +502,7 @@ function Home() {
                     gutterBottom
                     fontWeight={"bold"}
                   >
-                    {" "}
-                    AI RESPONSE
+                    {codeOptimizationResponseLabel}
                   </Typography>
                 </Grid>
                 {!error && !loading && (

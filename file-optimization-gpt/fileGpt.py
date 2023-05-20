@@ -16,6 +16,7 @@ headers = {"PRIVATE-TOKEN": git_lab_at}
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 project_id = ''
+project_path = ''
 
 conn = sqlite3.connect('kv_store.db')  # Connect to the SQLite database (it will be created if it doesn't exist)
 cursor = conn.cursor()
@@ -121,6 +122,7 @@ def get_files_recursive(path=''):
 @app.route('/files', methods=['GET', 'POST'])
 def get_files():
     global project_id
+    global project_path
     files_response = []
 
     project_url = request.json.get('url')
@@ -170,10 +172,10 @@ def gpt_endpoint():
         if prompt_len > token_len:
             if counter == 0:
                 prompt = 'List possible code improvements in this code: \n' + ''.join(response.content.decode('utf-8')[0:token_len])
-                output_text = chat_gpt_cached_answer(prompt)
+                output_text += chat_gpt_cached_answer(prompt)
             else:
                 prompt = 'and this code: \n' + ''.join(response.content.decode('utf-8')[(counter * token_len): token_len * (counter+1)])
-                output_text = chat_gpt_cached_answer(prompt)
+                output_text += chat_gpt_cached_answer(prompt)
             prompt_len = prompt_len - token_len
             counter += 1
         else:
@@ -182,8 +184,8 @@ def gpt_endpoint():
             prompt_len = 0
 
     print('Output: ', output_text)
-
-    return jsonify(success=True, output_text=output_text, prompt=prompt)
+    global project_path
+    return jsonify(success=True, output_text=output_text, prompt=prompt, project_path=project_path.replace("%2F", "/"), file_path=value.replace("%2F", "/"))
 
 
 if __name__ == '__main__':
